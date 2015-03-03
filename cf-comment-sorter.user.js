@@ -6,7 +6,6 @@
 // @require https://raw.githubusercontent.com/lodash/lodash/3.3.1/lodash.min.js
 // ==/UserScript==
 
-
 (function () {
     function print(o) {
         console.log(JSON.stringify(o));
@@ -17,7 +16,6 @@
         return parseInt(rating.children[0].innerHTML);
     }
 
-    //noinspection JSUnusedLocalSymbols
     function getId(comment) {
         return comment.getElementsByClassName('comment-table')[0].getAttribute('commentId');
     }
@@ -26,6 +24,12 @@
         var comments = _.filter(element.getElementsByClassName('comment'), function (comment) {
             return !comment.classList.contains('comment-reply-prototype');
         });
+
+        if (parentId !== '-1') {
+            comments = _.map(comments, function (comment) {
+                return comment.parentNode;
+            });
+        }
 
         var topComments = _.filter(comments, function (comment) {
             return comment.outerHTML.indexOf('commentparentid="' + parentId + '"') != -1;
@@ -38,7 +42,7 @@
         var parentNode = topComments[0].parentNode;
 
         _.forEachRight(topComments, function (comment) {
-            parentNode.removeChild(comment);
+            comment.parentNode.removeChild(comment);
         });
 
         topComments.sort(function (a, b) {
@@ -47,6 +51,11 @@
 
         _.forEach(topComments, function (comment) {
             parentNode.appendChild(comment);
+        });
+
+        _.forEach(topComments, function (comment) {
+            var elementToSort = parentId === '-1' ? comment : comment.childNodes[2];
+            sortComments(elementToSort, getId(comment));
         });
     }
 
